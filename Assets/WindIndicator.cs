@@ -8,6 +8,7 @@ public class WindIndicator : MonoBehaviour
     [SerializeField] private Camera cam;
     [SerializeField] private Transform windArrow;
     [SerializeField] private float windArrowOffset;
+    [SerializeField] private WindState windState;
 
     private float camYaw;
 
@@ -22,6 +23,7 @@ public class WindIndicator : MonoBehaviour
     {
         this.camYaw = cam.transform.rotation.eulerAngles.y;
         this.transform.rotation = Quaternion.Euler(0, 0, camYaw);
+        this.SetWindDirection(this.windState.GetWindDirection());
     }
 
     public void SetWindDirection(float counterClockwiseAngleFromNorth)

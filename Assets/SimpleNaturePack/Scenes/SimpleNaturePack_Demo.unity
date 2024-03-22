@@ -3972,6 +3972,7 @@ MonoBehaviour:
   cam: {fileID: 1286423222}
   windArrow: {fileID: 1373733288}
   windArrowOffset: 90
+  windState: {fileID: 1006688060}
 --- !u!1001 &540807875
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6921,6 +6922,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1006688059}
   - component: {fileID: 1006688058}
+  - component: {fileID: 1006688060}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -6957,6 +6959,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1006688060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1006688057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27abf8958fc4bbe499e31b63b454c379, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  windDirection: 90
 --- !u!1001 &1027479954
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7019,6 +7034,31 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: MyPlayerArmature
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: windState
+      value: 
+      objectReference: {fileID: 1006688060}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: flightMaxGravity
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: flightMinGravity
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: maxUpwardAcceleration
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: maxDownwardAcceleration
+      value: -2
       objectReference: {fileID: 0}
     - target: {fileID: 6780074360670760917, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}

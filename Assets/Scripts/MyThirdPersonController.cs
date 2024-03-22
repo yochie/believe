@@ -76,7 +76,9 @@ public class MyThirdPersonController : MonoBehaviour
 
     [Header("Flight")]
     [SerializeField] private GameObject deltaplan;
-    [SerializeField] private float flightGravity;
+    [SerializeField] private float maxUpwardAcceleration;
+    [SerializeField] private float maxDownwardAcceleration;
+    [SerializeField] private WindState windState;
 
     // cinemachine
     private float _cinemachineTargetYaw;
@@ -357,13 +359,28 @@ public class MyThirdPersonController : MonoBehaviour
         }
 
         deltaplan.SetActive(_input.fly);
-        currentGravity = _input.fly ? flightGravity : DefaultGravity;
+        float charYaw = -this.transform.rotation.eulerAngles.y;
+        float windDirection = this.windState.GetWindDirection();
+
+        currentGravity = _input.fly ? this.FlightGravity(charYaw, windDirection, this.maxUpwardAcceleration, this.maxDownwardAcceleration) : DefaultGravity;
 
         // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
         if (_verticalVelocity < _terminalVelocity)
         {
             _verticalVelocity += currentGravity * Time.deltaTime;
         }
+    }
+
+    //angles should be between 0 and 360
+    private float FlightGravity(float charYaw, float windDirection, float maxUpwardAcceleration, float maxDownwardAcceleration)
+    {
+        float windOpposition = Mathf.Abs(Mathf.DeltaAngle(charYaw, windDirection));
+        Debug.Log(windOpposition);
+        float oppositionRatio = windOpposition / 180f;
+        Debug.Log(oppositionRatio);
+        float result = Mathf.Lerp(maxUpwardAcceleration, maxDownwardAcceleration, oppositionRatio);
+        Debug.Log(result);
+        return result;
     }
 
     private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
