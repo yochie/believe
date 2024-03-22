@@ -1,0 +1,31 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class WindIndicator : MonoBehaviour
+{
+
+    [SerializeField] private Camera cam;
+    [SerializeField] private Transform windArrow;
+    [SerializeField] private float windArrowOffset;
+
+    private float camYaw;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        this.camYaw = cam.transform.rotation.eulerAngles.y;
+        this.transform.rotation = Quaternion.Euler(0, 0, camYaw);
+    }
+
+    public void SetWindDirection(float counterClockwiseAngleFromNorth)
+    {
+        this.windArrow.localRotation = Quaternion.Euler(0, 0, counterClockwiseAngleFromNorth + this.windArrowOffset);
+    }
+}
