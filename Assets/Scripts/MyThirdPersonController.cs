@@ -21,8 +21,8 @@ public class MyThirdPersonController : MonoBehaviour
     public float SprintSpeed = 5.335f;
 
     [Tooltip("How fast the character turns to face movement direction")]
-    [Range(0.0f, 0.3f)]
-    public float RotationSmoothTime = 0.12f;
+    [Range(0.0f, 3f)]
+    public float DefaultRotationSmoothTime = 0.12f;
 
     [Tooltip("Acceleration and deceleration")]
     public float SpeedChangeRate = 10.0f;
@@ -46,12 +46,10 @@ public class MyThirdPersonController : MonoBehaviour
     public float FallTimeout = 0.15f;
     
     [Tooltip("Freefall terminal speed")]
-    [SerializeField]
-    private float fallMinVelocity;
+    public float FallMinVelocity;
 
     [Tooltip("Jump upwards portion terminal speed")]
-    [SerializeField]
-    private float fallMaxVelocity;
+    public float JumpMaxVelocity;
 
     [Header("Player Grounded")]
     [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
@@ -83,12 +81,13 @@ public class MyThirdPersonController : MonoBehaviour
     public bool LockCameraPosition = false;
 
     [Header("Flight")]
-    [SerializeField] private GameObject deltaplan;
-    [SerializeField] private float maxUpwardAcceleration;
-    [SerializeField] private float maxDownwardAcceleration;
-    [SerializeField] private WindState windState;
-    [SerializeField] private float flightMinVelocity;
-    [SerializeField] private float flightMaxVelocity;
+    public GameObject Deltaplan;
+    public float MaxUpwardAcceleration;
+    public float MaxDownwardAcceleration;
+    public WindState WindState;
+    public float FlightMinVelocity;
+    public float FlightMaxVelocity;
+    public float FlightRotationSmoothTime;
 
     // cinemachine
     private float _cinemachineTargetYaw;
@@ -100,6 +99,7 @@ public class MyThirdPersonController : MonoBehaviour
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
     private float _verticalVelocity;
+    private float _currentRotationSmoothTime;
 
     // timeout deltatime
     private float _jumpTimeoutDelta;
@@ -124,7 +124,7 @@ public class MyThirdPersonController : MonoBehaviour
 
     private bool _hasAnimator;
 
-    private float currentGravity;
+    private float _currentGravity;
 
 
     private bool IsCurrentDeviceMouse
@@ -275,15 +275,22 @@ public class MyThirdPersonController : MonoBehaviour
             _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                 _mainCamera.transform.eulerAngles.y;
             float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                RotationSmoothTime);
+                _currentRotationSmoothTime);
 
             // rotate to face input direction relative to camera position
             transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
         }
 
-
-        Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
-
+        Vector3 targetDirection;
+        if (_input.fly)
+        {
+            //move forward along smoothed rotation
+            targetDirection = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0) * Vector3.forward;
+        } else
+        {
+            targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+        }
+        
         // move the player
         _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
@@ -341,8 +348,8 @@ public class MyThirdPersonController : MonoBehaviour
             }
 
             _input.fly = false;
-            deltaplan.SetActive(false);
-            currentGravity = DefaultGravity;
+            Deltaplan.SetActive(false);
+            _currentGravity = DefaultGravity;
         }
         else
         {
@@ -368,35 +375,33 @@ public class MyThirdPersonController : MonoBehaviour
 
         }
 
-        deltaplan.SetActive(_input.fly);
-        float charYaw = -this.transform.rotation.eulerAngles.y;
-        float windDirection = this.windState.GetWindDirection();
-
-
+        Deltaplan.SetActive(_input.fly);
         if (_input.fly)
         {
-            currentGravity = this.FlightGravity(charYaw, windDirection, this.maxUpwardAcceleration, this.maxDownwardAcceleration);
-            _verticalVelocity += currentGravity * Time.deltaTime;
-            _verticalVelocity = Mathf.Clamp(_verticalVelocity, flightMinVelocity, flightMaxVelocity);
+            float charYaw = -this.transform.rotation.eulerAngles.y;
+            bool moving = _input.move != Vector2.zero;
+            _currentGravity = FlightGravity(moving, charYaw, WindState, this.MaxUpwardAcceleration, this.MaxDownwardAcceleration);
+            _verticalVelocity += _currentGravity * Time.deltaTime;
+            _verticalVelocity = Mathf.Clamp(_verticalVelocity, FlightMinVelocity, FlightMaxVelocity);
+            _currentRotationSmoothTime = FlightRotationSmoothTime;
         } else
         {
-            currentGravity = DefaultGravity;
-            _verticalVelocity += currentGravity * Time.deltaTime;
-            _verticalVelocity = Mathf.Clamp(_verticalVelocity, fallMinVelocity, fallMaxVelocity);
-
+            _currentGravity = DefaultGravity;
+            _verticalVelocity += _currentGravity * Time.deltaTime;
+            _verticalVelocity = Mathf.Clamp(_verticalVelocity, FallMinVelocity, JumpMaxVelocity);
+            _currentRotationSmoothTime = DefaultRotationSmoothTime;
         }
     }
 
     //angles should be between 0 and 360
-    private float FlightGravity(float charYaw, float windDirection, float maxUpwardAcceleration, float maxDownwardAcceleration)
+    private static float FlightGravity(bool moving, float charYaw, WindState windState, float maxUpwardAcceleration, float maxDownwardAcceleration)
     {
-        float windOpposition = Mathf.Abs(Mathf.DeltaAngle(charYaw, windDirection));
-        Debug.Log(windOpposition);
+        if (!moving)
+            return maxDownwardAcceleration;
+
+        float windOpposition = Mathf.Abs(Mathf.DeltaAngle(charYaw, windState.GetWindDirection()));
         float oppositionRatio = windOpposition / 180f;
-        Debug.Log(oppositionRatio);
-        float result = Mathf.Lerp(maxUpwardAcceleration, maxDownwardAcceleration, oppositionRatio);
-        Debug.Log(result);
-        return result;
+        return Mathf.Lerp(maxUpwardAcceleration, maxDownwardAcceleration, oppositionRatio);
     }
 
     private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
