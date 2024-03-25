@@ -7,6 +7,7 @@ public class WindIndicator : MonoBehaviour
 
     [SerializeField] private Camera cam;
     [SerializeField] private Transform windArrow;
+    [Tooltip("Counter clockwise angle from default arrow position to north pointing")]
     [SerializeField] private float windArrowOffset;
     [SerializeField] private WindState windState;
 

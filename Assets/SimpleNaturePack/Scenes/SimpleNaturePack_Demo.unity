@@ -6942,8 +6942,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 268ce9ea154190c429bccfff80b76b1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windDirection: 0
-  windIndicator: {fileID: 519906519}
 --- !u!4 &1006688059
 Transform:
   m_ObjectHideFlags: 0
@@ -7042,6 +7040,21 @@ PrefabInstance:
       objectReference: {fileID: 1006688060}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: jumpVelocity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: fallMaxVelocity
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: fallMinVelocity
+      value: -20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: flightMaxGravity
       value: -2
       objectReference: {fileID: 0}
@@ -7052,8 +7065,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: flightMaxVelocity
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: flightMinVelocity
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: maxUpwardAcceleration
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}

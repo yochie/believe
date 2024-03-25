@@ -44,6 +44,14 @@ public class MyThirdPersonController : MonoBehaviour
 
     [Tooltip("Time required to pass before entering the fall state. Useful for walking down stairs")]
     public float FallTimeout = 0.15f;
+    
+    [Tooltip("Freefall terminal speed")]
+    [SerializeField]
+    private float fallMinVelocity;
+
+    [Tooltip("Jump upwards portion terminal speed")]
+    [SerializeField]
+    private float fallMaxVelocity;
 
     [Header("Player Grounded")]
     [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
@@ -79,6 +87,8 @@ public class MyThirdPersonController : MonoBehaviour
     [SerializeField] private float maxUpwardAcceleration;
     [SerializeField] private float maxDownwardAcceleration;
     [SerializeField] private WindState windState;
+    [SerializeField] private float flightMinVelocity;
+    [SerializeField] private float flightMaxVelocity;
 
     // cinemachine
     private float _cinemachineTargetYaw;
@@ -90,7 +100,6 @@ public class MyThirdPersonController : MonoBehaviour
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
     private float _verticalVelocity;
-    private float _terminalVelocity = 200f;
 
     // timeout deltatime
     private float _jumpTimeoutDelta;
@@ -116,6 +125,7 @@ public class MyThirdPersonController : MonoBehaviour
     private bool _hasAnimator;
 
     private float currentGravity;
+
 
     private bool IsCurrentDeviceMouse
     {
@@ -362,12 +372,18 @@ public class MyThirdPersonController : MonoBehaviour
         float charYaw = -this.transform.rotation.eulerAngles.y;
         float windDirection = this.windState.GetWindDirection();
 
-        currentGravity = _input.fly ? this.FlightGravity(charYaw, windDirection, this.maxUpwardAcceleration, this.maxDownwardAcceleration) : DefaultGravity;
 
-        // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
-        if (_verticalVelocity < _terminalVelocity)
+        if (_input.fly)
         {
+            currentGravity = this.FlightGravity(charYaw, windDirection, this.maxUpwardAcceleration, this.maxDownwardAcceleration);
             _verticalVelocity += currentGravity * Time.deltaTime;
+            _verticalVelocity = Mathf.Clamp(_verticalVelocity, flightMinVelocity, flightMaxVelocity);
+        } else
+        {
+            currentGravity = DefaultGravity;
+            _verticalVelocity += currentGravity * Time.deltaTime;
+            _verticalVelocity = Mathf.Clamp(_verticalVelocity, fallMinVelocity, fallMaxVelocity);
+
         }
     }
 
