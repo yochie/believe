@@ -87,7 +87,9 @@ public class MyThirdPersonController : MonoBehaviour
     public WindState WindState;
     public float FlightMinVelocity;
     public float FlightMaxVelocity;
-    public float FlightRotationSmoothTime;
+    public float FlightYRotationSmoothTime;
+    public float FlightXRotationSmoothTime;
+    public float FlightMaxXIncline = 32.5f;
 
     // cinemachine
     private float _cinemachineTargetYaw;
@@ -96,10 +98,12 @@ public class MyThirdPersonController : MonoBehaviour
     // player
     private float _speed;
     private float _animationBlend;
-    private float _targetRotation = 0.0f;
-    private float _rotationVelocity;
+    private float _targetYRotation = 0.0f;
+    private float _yRotationVelocity;
+    private float _xRotationVelocity;
     private float _verticalVelocity;
-    private float _currentRotationSmoothTime;
+    private float _currentYRotationSmoothTime;
+    private float _currentXRotationSmoothTime;
 
     // timeout deltatime
     private float _jumpTimeoutDelta;
@@ -272,13 +276,31 @@ public class MyThirdPersonController : MonoBehaviour
         // if there is a move input rotate player when the player is moving
         if (_input.move != Vector2.zero)
         {
-            _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+            _targetYRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                 _mainCamera.transform.eulerAngles.y;
-            float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                _currentRotationSmoothTime);
+            float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYRotation, ref _yRotationVelocity,
+                _currentYRotationSmoothTime);
+
+            float xRotation;            
+            if (_input.fly)
+            {
+                float angleToTarget = Mathf.Abs(Mathf.DeltaAngle(_targetYRotation, transform.eulerAngles.y));
+                
+                float _targetXRotation = Mathf.Lerp(FlightMaxXIncline, -FlightMaxXIncline, (angleToTarget / 180f));
+                Debug.Log(_targetXRotation);
+                xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetXRotation, ref _xRotationVelocity, FlightXRotationSmoothTime);
+            } else
+            {
+                Debug.Log(transform.eulerAngles.x);
+                xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, 0f, ref _xRotationVelocity, DefaultRotationSmoothTime);
+            }
 
             // rotate to face input direction relative to camera position
-            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            transform.rotation = Quaternion.Euler(xRotation, yRotation, transform.eulerAngles.z);
+        } else
+        {
+            float xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, 0f, ref _xRotationVelocity, _currentYRotationSmoothTime);
+            transform.rotation = Quaternion.Euler(xRotation, transform.eulerAngles.y, transform.eulerAngles.z);
         }
 
         Vector3 targetDirection;
@@ -288,7 +310,7 @@ public class MyThirdPersonController : MonoBehaviour
             targetDirection = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0) * Vector3.forward;
         } else
         {
-            targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+            targetDirection = Quaternion.Euler(0.0f, _targetYRotation, 0.0f) * Vector3.forward;
         }
         
         // move the player
@@ -383,13 +405,15 @@ public class MyThirdPersonController : MonoBehaviour
             _currentGravity = FlightGravity(moving, charYaw, WindState, this.MaxUpwardAcceleration, this.MaxDownwardAcceleration);
             _verticalVelocity += _currentGravity * Time.deltaTime;
             _verticalVelocity = Mathf.Clamp(_verticalVelocity, FlightMinVelocity, FlightMaxVelocity);
-            _currentRotationSmoothTime = FlightRotationSmoothTime;
+            _currentYRotationSmoothTime = FlightYRotationSmoothTime;
+            _currentXRotationSmoothTime = FlightXRotationSmoothTime;
         } else
         {
             _currentGravity = DefaultGravity;
             _verticalVelocity += _currentGravity * Time.deltaTime;
             _verticalVelocity = Mathf.Clamp(_verticalVelocity, FallMinVelocity, JumpMaxVelocity);
-            _currentRotationSmoothTime = DefaultRotationSmoothTime;
+            _currentYRotationSmoothTime = DefaultRotationSmoothTime;
+            _currentXRotationSmoothTime = DefaultRotationSmoothTime;
         }
     }
 

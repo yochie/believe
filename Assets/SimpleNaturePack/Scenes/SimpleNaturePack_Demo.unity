@@ -7144,6 +7144,16 @@ PrefabInstance:
       propertyPath: FlightRotationSmoothTime
       value: 1.5
       objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightXRotationSmoothTime
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightYRotationSmoothTime
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 6780074360670760917, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: m_LocalPosition.x
