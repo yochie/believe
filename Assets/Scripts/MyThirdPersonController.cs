@@ -87,6 +87,9 @@ public class MyThirdPersonController : MonoBehaviour
     public float FlightMaxRiseAcceleration;
     public float FlightMaxFallSpeed;
     public float FlightMaxFallAcceleration;
+    public float FlightMaxMoveSpeed;
+    public float FlightMaxMoveAcceleration;
+    public float FlightMaxMoveDeceleration;
     public float FlightYRotationSmoothTime;
     public float FlightXRotationSmoothTime;
     public float FlightZRotationSmoothTime;
@@ -238,16 +241,32 @@ public class MyThirdPersonController : MonoBehaviour
     private void Move()
     {
         // set target speed based on move speed, sprint speed and if sprint is pressed
-        float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+        // normalise input direction
+        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+        _targetYRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+                    _mainCamera.transform.eulerAngles.y;
+        float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
+
+        float targetSpeed;
+        if (_input.fly)
+        {
+            targetSpeed = currentHorizontalSpeed + FlightAcceleration(transform.eulerAngles.y, _targetYRotation) * Time.deltaTime;
+            targetSpeed = Mathf.Clamp(targetSpeed, 0, FlightMaxMoveSpeed);
+            if (_input.move == Vector2.zero) targetSpeed = currentHorizontalSpeed - (FlightMaxMoveDeceleration * Time.deltaTime);
+
+        }
+        else
+        {
+            targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+            // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
+            // if there is no input, set the target speed to 0
+            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+        }
+            
 
         // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
-        // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-        // if there is no input, set the target speed to 0
-        if (_input.move == Vector2.zero) targetSpeed = 0.0f;
 
-        // a reference to the players current horizontal velocity
-        float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
 
         float speedOffset = 0.1f;
         float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
@@ -272,15 +291,13 @@ public class MyThirdPersonController : MonoBehaviour
         _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
         if (_animationBlend < 0.01f) _animationBlend = 0f;
 
-        // normalise input direction
-        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+
 
         // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
         //YAW + PITCH + ROLL
         if (_input.move != Vector2.zero)
         {
-            _targetYRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
-                                _mainCamera.transform.eulerAngles.y;
+
             float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYRotation, ref _yRotationVelocity,
                 _currentYRotationSmoothTime);
 
@@ -293,7 +310,7 @@ public class MyThirdPersonController : MonoBehaviour
                 float angleToTarget = Mathf.DeltaAngle(_targetYRotation, transform.eulerAngles.y);
                 
                 float _targetXRotation = Mathf.Lerp(FlightMaxPitch, -FlightMaxPitch, Mathf.Abs(angleToTarget / 180f));
-                float _targetZRotation = Mathf.Lerp(0, angleToTarget > 0 ? FlightMaxRoll : -FlightMaxRoll , Mathf.Abs(angleToTarget / 180));
+                float _targetZRotation = Mathf.Lerp(0, angleToTarget > 0 ? FlightMaxRoll : -FlightMaxRoll , Mathf.Abs(angleToTarget / 90));
 
                 xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetXRotation, ref _xRotationVelocity, _currentXRotationSmoothTime);
                 zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetZRotation, ref _zRotationVelocity, _currentZRotationSmoothTime);
@@ -336,6 +353,12 @@ public class MyThirdPersonController : MonoBehaviour
             _animator.SetFloat(_animIDSpeed, _animationBlend);
             _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
         }
+    }
+
+    private float FlightAcceleration(float currentRotation, float targetRotation)
+    {        
+        float angleDelta = Mathf.DeltaAngle(currentRotation, targetRotation);
+        return Mathf.Lerp(FlightMaxMoveAcceleration, FlightMaxMoveDeceleration, angleDelta / 45f);
     }
 
     private void JumpAndGravity()

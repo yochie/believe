@@ -6488,6 +6488,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9078993845375825671, guid: 924cb4605c3ceee4f9071da23802ebae,
+        type: 3}
+      propertyPath: m_ShowCameraFrustum
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7046,6 +7051,11 @@ PrefabInstance:
       objectReference: {fileID: 735736430}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: MoveSpeed
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: WindState
       value: 
       objectReference: {fileID: 1006688060}
@@ -7058,6 +7068,11 @@ PrefabInstance:
         type: 3}
       propertyPath: JumpHeight
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: SprintSpeed
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -7077,12 +7092,12 @@ PrefabInstance:
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxRoll
-      value: 80
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxPitch
-      value: 35
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -7098,6 +7113,11 @@ PrefabInstance:
         type: 3}
       propertyPath: JumpMaxVelocity
       value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: SpeedChangeRate
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -7142,12 +7162,17 @@ PrefabInstance:
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxFallSpeed
-      value: -3
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxMoveSpeed
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxRiseSpeed
-      value: 10
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -7182,12 +7207,22 @@ PrefabInstance:
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxFallAcceleration
-      value: -5
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxMoveAcceleration
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxMoveDeceleration
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxRiseAcceleration
-      value: 5
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -7197,7 +7232,7 @@ PrefabInstance:
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightYRotationSmoothTime
-      value: 1.5
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
