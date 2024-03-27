@@ -103,14 +103,16 @@ public class MyThirdPersonController : MonoBehaviour
     // player
     private float _speed;
     private float _animationBlend;
-    private float _targetYRotation = 0.0f;
+    private float _targetYawRotation = 0.0f;
+    private float _targetPitchRotation = 0.0f;
+    private float _targetRollRotation = 0.0f;
     private float _yRotationVelocity;
     private float _xRotationVelocity;
     private float _zRotationVelocity;
     private float _verticalVelocity;
-    private float _currentYRotationSmoothTime;
-    private float _currentXRotationSmoothTime;
-    private float _currentZRotationSmoothTime;
+    private float _currentYawRotationSmoothTime;
+    private float _currentPitchRotationSmoothTime;
+    private float _currentRollRotationSmoothTime;
 
     // timeout deltatime
     private float _jumpTimeoutDelta;
@@ -183,9 +185,12 @@ public class MyThirdPersonController : MonoBehaviour
     {
         _hasAnimator = TryGetComponent(out _animator);
 
-        JumpAndGravity();
+        JumpAndGravity();        
         GroundedCheck();
-        Move();
+        if (!_input.fly)
+            GroundMove();
+        else
+            FlightMove();
     }
 
     private void LateUpdate()
@@ -238,36 +243,15 @@ public class MyThirdPersonController : MonoBehaviour
             _cinemachineTargetYaw, 0.0f);
     }
 
-    private void Move()
+    private void GroundMove()
     {
-        // set target speed based on move speed, sprint speed and if sprint is pressed
-        // normalise input direction
-        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
-        _targetYRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
-                    _mainCamera.transform.eulerAngles.y;
+        //SPEED
+        float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+        // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
+        // if there is no input, set the target speed to 0
+        if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+
         float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
-
-        float targetSpeed;
-        if (_input.fly)
-        {
-            targetSpeed = currentHorizontalSpeed + FlightAcceleration(transform.eulerAngles.y, _targetYRotation) * Time.deltaTime;
-            targetSpeed = Mathf.Clamp(targetSpeed, 0, FlightMaxMoveSpeed);
-            if (_input.move == Vector2.zero) targetSpeed = currentHorizontalSpeed - (FlightMaxMoveDeceleration * Time.deltaTime);
-
-        }
-        else
-        {
-            targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
-            // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-            // if there is no input, set the target speed to 0
-            if (_input.move == Vector2.zero) targetSpeed = 0.0f;
-        }
-            
-
-        // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
-
-
-
         float speedOffset = 0.1f;
         float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
 
@@ -288,70 +272,88 @@ public class MyThirdPersonController : MonoBehaviour
             _speed = targetSpeed;
         }
 
-        _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
-        if (_animationBlend < 0.01f) _animationBlend = 0f;
-
-
-
+        //ROTATION
         // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
         //YAW + PITCH + ROLL
+        //Smooth pitch and roll towards 0 (in case we just landed)
+        float xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, 0f, ref _xRotationVelocity, _currentPitchRotationSmoothTime);
+        float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, 0f, ref _zRotationVelocity, _currentRollRotationSmoothTime);
+        float yRotation;
+        //Smooth yaw towards movement direction
         if (_input.move != Vector2.zero)
         {
-
-            float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYRotation, ref _yRotationVelocity,
-                _currentYRotationSmoothTime);
-
-            float xRotation;
-            float zRotation;
-            if (_input.fly)
-            {
-                //Angle roll and pitch based on delta between current yaw and target
-
-                float angleToTarget = Mathf.DeltaAngle(_targetYRotation, transform.eulerAngles.y);
-                
-                float _targetXRotation = Mathf.Lerp(FlightMaxPitch, -FlightMaxPitch, Mathf.Abs(angleToTarget / 180f));
-                float _targetZRotation = Mathf.Lerp(0, angleToTarget > 0 ? FlightMaxRoll : -FlightMaxRoll , Mathf.Abs(angleToTarget / 90));
-
-                xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetXRotation, ref _xRotationVelocity, _currentXRotationSmoothTime);
-                zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetZRotation, ref _zRotationVelocity, _currentZRotationSmoothTime);
-            } else
-            {
-                //Smooth towards 0
-                xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, 0f, ref _xRotationVelocity, _currentXRotationSmoothTime);
-                zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, 0f, ref _zRotationVelocity, _currentZRotationSmoothTime);
-            }
-
-            // rotate to face input direction relative to camera position
-            transform.rotation = Quaternion.Euler(xRotation, yRotation, zRotation);
-        } else
-        {
-            //when idle, return to neutral roll and pitch, leave yaw as is
-            float xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, 0f, ref _xRotationVelocity, _currentXRotationSmoothTime);
-            float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, 0f, ref _zRotationVelocity, _currentZRotationSmoothTime);
-
-            transform.rotation = Quaternion.Euler(xRotation, transform.eulerAngles.y, zRotation);
+            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            _targetYawRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
+            yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yRotationVelocity, _currentYawRotationSmoothTime);
         }
+        else
+            yRotation = transform.eulerAngles.y;
 
-        Vector3 targetDirection;
-        if (_input.fly)
-        {
-            //move forward with current yaw (along smoothed rotation)
-            targetDirection = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0) * Vector3.forward;
-        } else
-        {
-            //move directly in input direction
-            targetDirection = Quaternion.Euler(0.0f, _targetYRotation, 0.0f) * Vector3.forward;
-        }
+        // rotate to face input direction relative to camera position
+        transform.rotation = Quaternion.Euler(xRotation, yRotation, zRotation);
+
+        Vector3 targetDirection = Quaternion.Euler(0.0f, _targetYawRotation, 0.0f) * Vector3.forward;
         
-        // move the player
-        _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
-                            new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+        //DO MOVE
+        _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+
+        //ANIMATOR
+        _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
+        if (_animationBlend < 0.01f) _animationBlend = 0f;
 
         // update animator if using character
         if (_hasAnimator)
         {
             _animator.SetFloat(_animIDSpeed, _animationBlend);
             _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+        }
+    }
+
+    private void FlightMove()
+    {
+        // normalise input direction
+        Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+
+        float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;        
+        float targetSpeed = currentHorizontalSpeed + FlightAcceleration(transform.eulerAngles.y, _targetYawRotation) * Time.deltaTime;
+        targetSpeed = Mathf.Clamp(targetSpeed, 0, FlightMaxMoveSpeed);
+        
+        //Decelerate when not inputing move
+        if (_input.move == Vector2.zero) targetSpeed = currentHorizontalSpeed - (FlightMaxMoveDeceleration * Time.deltaTime);
+
+        //Angle roll and pitch based on delta between current yaw and target
+        if (_input.move != Vector2.zero)
+        {
+            _targetYawRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + _mainCamera.transform.eulerAngles.y;
+            float angleToTargetYaw = Mathf.DeltaAngle(_targetYawRotation, transform.eulerAngles.y);
+            _targetPitchRotation = Mathf.Lerp(FlightMaxPitch, -FlightMaxPitch, Mathf.Abs(angleToTargetYaw / 180f));
+            _targetRollRotation = Mathf.Lerp(0, angleToTargetYaw > 0 ? FlightMaxRoll : -FlightMaxRoll, Mathf.Abs(angleToTargetYaw / 90));
+        } else
+        {
+            _targetYawRotation = transform.eulerAngles.y;
+            _targetPitchRotation = 0f;
+            _targetRollRotation = 0f;
+        }
+        float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yRotationVelocity, _currentYawRotationSmoothTime);
+        float xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xRotationVelocity, _currentPitchRotationSmoothTime);
+        float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetRollRotation, ref _zRotationVelocity, _currentRollRotationSmoothTime);
+        // rotate to face input direction relative to camera position
+        transform.rotation = Quaternion.Euler(xRotation, yRotation, zRotation);
+
+        //move forward with current yaw (along smoothed rotation)
+        Vector3 targetDirection = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0) * Vector3.forward;
+
+        // move the player
+        _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+
+        _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
+        if (_animationBlend < 0.01f) _animationBlend = 0f;
+
+        // update animator if using character
+        if (_hasAnimator)
+        {
+            _animator.SetFloat(_animIDSpeed, _animationBlend);
+            _animator.SetFloat(_animIDMotionSpeed, 1f);
         }
     }
 
@@ -441,17 +443,17 @@ public class MyThirdPersonController : MonoBehaviour
             _currentGravity = FlightGravity(moving, charYaw, WindState, this.FlightMaxRiseAcceleration, this.FlightMaxFallAcceleration);
             _verticalVelocity += _currentGravity * Time.deltaTime;
             _verticalVelocity = Mathf.Clamp(_verticalVelocity, FlightMaxFallSpeed, FlightMaxRiseSpeed);
-            _currentYRotationSmoothTime = FlightYRotationSmoothTime;
-            _currentXRotationSmoothTime = FlightXRotationSmoothTime;
-            _currentZRotationSmoothTime = FlightZRotationSmoothTime;
+            _currentYawRotationSmoothTime = FlightYRotationSmoothTime;
+            _currentPitchRotationSmoothTime = FlightXRotationSmoothTime;
+            _currentRollRotationSmoothTime = FlightZRotationSmoothTime;
         } else
         {
             _currentGravity = DefaultGravity;
             _verticalVelocity += _currentGravity * Time.deltaTime;
             _verticalVelocity = Mathf.Clamp(_verticalVelocity, MaxFallSpeed, MaxRiseSpeed);
-            _currentYRotationSmoothTime = DefaultRotationSmoothTime;
-            _currentXRotationSmoothTime = DefaultRotationSmoothTime;
-            _currentZRotationSmoothTime = DefaultRotationSmoothTime;
+            _currentYawRotationSmoothTime = DefaultRotationSmoothTime;
+            _currentPitchRotationSmoothTime = DefaultRotationSmoothTime;
+            _currentRollRotationSmoothTime = DefaultRotationSmoothTime;
         }
     }
 
