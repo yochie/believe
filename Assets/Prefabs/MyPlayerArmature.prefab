@@ -1120,9 +1120,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6543230b82fad24aaf0dc2aad39770c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveSpeed: 2
-  SprintSpeed: 5.335
-  RotationSmoothTime: 0.12
+  MoveSpeed: 8
+  SprintSpeed: 8
+  DefaultRotationSmoothTime: 0.12
   SpeedChangeRate: 10
   LandingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
   FootstepAudioClips:
@@ -1137,10 +1137,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 274649b0e221539409070ebf6c18918b, type: 3}
   - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
   FootstepAudioVolume: 0.3
-  JumpHeight: 1.2
+  JumpHeight: 2
   DefaultGravity: -15
   JumpTimeout: 0.3
   FallTimeout: 0.15
+  MaxFallSpeed: -40
+  MaxRiseSpeed: 100
   Grounded: 1
   GroundedOffset: -0.14
   GroundedRadius: 0.28
@@ -1152,8 +1154,20 @@ MonoBehaviour:
   BottomClamp: -30
   CameraAngleOverride: 0
   LockCameraPosition: 0
-  deltaplan: {fileID: 6150924343392335215}
-  flightGravity: -1.5
+  Deltaplan: {fileID: 6150924343392335215}
+  WindState: {fileID: 0}
+  FlightMaxRiseSpeed: 8
+  FlightMaxRiseAcceleration: 3
+  FlightMaxFallSpeed: -6
+  FlightMaxFallAcceleration: -3
+  FlightMaxMoveSpeed: 12
+  FlightMaxMoveAcceleration: 6
+  FlightMaxMoveDeceleration: 4
+  FlightYRotationSmoothTime: 1.3
+  FlightXRotationSmoothTime: 0.5
+  FlightZRotationSmoothTime: 0.5
+  FlightMaxPitch: 30
+  FlightMaxRoll: 90
 --- !u!114 &3414902464692070517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2703,7 +2717,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 3078ffde4f92d844e9bb1cef3fbc740c,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.05
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3078ffde4f92d844e9bb1cef3fbc740c,
         type: 3}
