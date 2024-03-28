@@ -465,6 +465,11 @@ PrefabInstance:
       propertyPath: WindState
       value: 
       objectReference: {fileID: 1624171083}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxMoveSpeed
+      value: 20
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
