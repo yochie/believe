@@ -467,8 +467,33 @@ PrefabInstance:
       objectReference: {fileID: 1624171083}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: FlightGravity
+      value: -2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: FlightMaxMoveSpeed
-      value: 20
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: PitchDownFallForce
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: PitchDownAccelerateForce
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxFallAcceleration
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: SpeedForMaxYokeRiseEffect
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
