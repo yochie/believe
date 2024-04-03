@@ -487,13 +487,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: FlightStartSpeed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightMaxRiseSlow
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: FlightMaxDiveAccel
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightMaxMoveSpeed
-      value: 12
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
@@ -508,7 +518,7 @@ PrefabInstance:
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: MinSpeedForRiseCapacity
-      value: 6
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
