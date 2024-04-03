@@ -81,27 +81,26 @@ public class MyThirdPersonController : MonoBehaviour
     public bool LockCameraPosition = false;
 
     [Header("Flight")]
-    public GameObject Deltaplan;
+    public GameObject glider;
     public WindState WindState;
     public float FlightStartSpeed = 5f;
-    //public float FlightMaxRiseSpeed;
-    //public float FlightMaxRiseAcceleration;
-    //public float FlightMaxFallSpeed;
     public float FlightGravity;
-    public float FlightMaxMoveSpeed;
-    //public float FlightMaxMoveAcceleration;
-    //public float FlightMaxMoveDeceleration;
+    public float FlightMinMoveSpeed = 2f;
+    public float FlightMaxMoveSpeed = 12f;
+    public float FlightMaxDiveAccel = 10f;
+    public float FlightMaxRiseSlow = -8f;
+    [Tooltip("Below this speed, gravity takes over.")]
+    public float MinSpeedForRiseCapacity = 3;
+    [Tooltip("Up to this speed, rise capacity is improved.")]
+    public float MaxSpeedForRiseCapacity = 10;
     public float FlightYRotationSmoothTime;
     public float FlightXRotationSmoothTime;
     public float FlightZRotationSmoothTime;
+    public float FlightGravityRotationSmoothTime = 0.3f;
     public float FlightMaxPitch = 32.5f;
     public float FlightMaxRoll = 45f;
-    public float PitchUpRiseForce = 5f;
-    public float PitchUpSlowForce = -1f;
-    public float PitchDownFallForce = -2f;
-    public float PitchDownAccelerateForce = 4f;
-    public float MinSpeedForYokeRiseEffect = 3;
-    public float SpeedForMaxYokeRiseEffect = 10;
+    public float FlightPitchForNeutralSpeed = 15f;
+
 
     // cinemachine
     private float _cinemachineTargetYaw;
@@ -119,10 +118,8 @@ public class MyThirdPersonController : MonoBehaviour
     private float _yFlightRotationVelocity;
     private float _xFlightRotationVelocity;
     private float _zFlightRotationVelocity;
+    //only used outside flight
     private float _verticalVelocity;
-    private float _currentYawRotationSmoothTime;
-    private float _currentPitchRotationSmoothTime;
-    private float _currentRollRotationSmoothTime;
     private bool _flying;
 
     // timeout deltatime
@@ -147,9 +144,6 @@ public class MyThirdPersonController : MonoBehaviour
     private const float _threshold = 0.01f;
 
     private bool _hasAnimator;
-
-    private float _currentGravity;
-
 
     private bool IsCurrentDeviceMouse
     {
@@ -204,7 +198,7 @@ public class MyThirdPersonController : MonoBehaviour
             _input.fly = false;
 
         _flying = _input.fly;
-        Deltaplan.SetActive(_flying);
+        glider.SetActive(_flying);
 
         if (!_flying)
         {
@@ -260,8 +254,8 @@ public class MyThirdPersonController : MonoBehaviour
         }
 
         // clamp our rotations so our values are limited 360 degrees
-        _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
-        _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+        _cinemachineTargetYaw = Clamp360Angle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
+        _cinemachineTargetPitch = Clamp360Angle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
         // Cinemachine will follow this target
         CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
@@ -338,23 +332,37 @@ public class MyThirdPersonController : MonoBehaviour
     private void FlightMove(bool flightStart)
     {
         //ROTATE
+        float riseCapacity = RiseCapacityForCurrentSpeed();
+        float xRotation;
+        if (riseCapacity > 0)
+        {
+            //Allow user control over pitch
 
-        //for determining delta later
-        Quaternion previousRotation = transform.rotation;
-
-        float yokeRiseEffectiveness = YokeRiseEffectiveness();
-        float maxPitchForYokeRise = Mathf.Lerp(FlightMaxPitch / 4, FlightMaxPitch, yokeRiseEffectiveness);
-
-        //scale backwards pitch based on yoke rise effectiveness
-        if(_input.move.y >= 0)
-        
-            _targetPitchRotation = Mathf.Lerp(0, FlightMaxPitch, _input.move.y);
+            float maxUpwardsPitch = -Mathf.Lerp(0f, FlightMaxPitch, riseCapacity);
+            if (Mathf.Approximately(_input.move.y, 0))
+                //keep current pitch but clamp to updated rise capacity
+                _targetPitchRotation = ClampEulerAngle(transform.eulerAngles.x, maxUpwardsPitch, FlightMaxPitch);
+            else if (_input.move.y >= 0)
+                //dive
+                _targetPitchRotation = Mathf.Lerp(0, FlightMaxPitch, _input.move.y);
+            else
+                //rise as much as possible
+                _targetPitchRotation = Mathf.Lerp(maxUpwardsPitch, 0, _input.move.y + 1);
+            
+            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightXRotationSmoothTime);
+        }
         else
-            _targetPitchRotation = Mathf.Lerp(-maxPitchForYokeRise, 0, _input.move.y + 1);
-        
+        {
+            //gravity takes over
+            //todo: can still dive even faster if desired
+            _targetPitchRotation = 85f;
+            
+            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightGravityRotationSmoothTime);
+        }
+
+
         _targetYawRotation =  this.transform.eulerAngles.y + (90f * _input.move.x);
         _targetRollRotation = _input.move.x * -FlightMaxRoll;
-        float xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightXRotationSmoothTime);
         float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yFlightRotationVelocity, FlightYRotationSmoothTime);
         float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetRollRotation, ref _zFlightRotationVelocity, FlightZRotationSmoothTime);
 
@@ -362,50 +370,38 @@ public class MyThirdPersonController : MonoBehaviour
 
         //ACCELERATE
 
-        Vector3 pitchAcceleration;
-        if (Mathf.Approximately(_input.move.y, 0f))
+        Vector3 currentForward = transform.rotation * Vector3.forward;
+        float deltaFromDown = Vector3.Angle(currentForward, Vector3.down);
+        float pitchAcceleration;
+        float deltaFromDownForNeutralSpeed = 90 - FlightPitchForNeutralSpeed;
+        if (deltaFromDown <= deltaFromDownForNeutralSpeed)
+            pitchAcceleration = Mathf.Lerp(FlightMaxDiveAccel, 0, deltaFromDown / deltaFromDownForNeutralSpeed);
+        else
         {
-            pitchAcceleration = new Vector3(0, 0, 0f);
-        }
-        else if (_input.move.y < 0)
-        {
-            //yoke pulled back => rise and slow, scale based off yoke effectiveness at current speed
-            pitchAcceleration = new Vector3(0, PitchUpRiseForce * yokeRiseEffectiveness, PitchUpSlowForce);
-        } else
-        {
-            //yoke pushed forward => fall and accelerate
-            pitchAcceleration = new Vector3(0, PitchDownFallForce, PitchDownAccelerateForce);
+            float deltaFromNeutral = deltaFromDown - deltaFromDownForNeutralSpeed;
+            float maxDeltaFromNeutral = FlightMaxPitch + 90 - deltaFromDownForNeutralSpeed;
+            pitchAcceleration = Mathf.Lerp(0, FlightMaxRiseSlow, deltaFromNeutral / maxDeltaFromNeutral);
         }
 
-        //rotates pitch acceleration to align with current forward     
-        Vector3 forwardPitchAcceleration = Quaternion.AngleAxis(transform.eulerAngles.y, Vector3.up) * pitchAcceleration;
-        Vector3 gravityAcceleration = new Vector3(0, FlightGravity, 0f);
-
-        Vector3 previousVelocity;
+        float previousSpeed;
         if (flightStart)
         {
-            Vector3 currentForward = transform.rotation * Vector3.forward;
-            previousVelocity = currentForward * FlightStartSpeed;
+            previousSpeed = FlightStartSpeed;
         } else
         {
-            previousVelocity = _controller.velocity;
+            previousSpeed = _controller.velocity.magnitude;
         }
 
-        //rotates velocity so we always go forward on horizontal plane
-        float yawRotation = Mathf.DeltaAngle(previousRotation.eulerAngles.y, transform.eulerAngles.y);
-        Vector3 newVelocity = Quaternion.AngleAxis(yawRotation, Vector3.up) * previousVelocity;
-        
-        newVelocity += (forwardPitchAcceleration + gravityAcceleration) * Time.deltaTime;
-        newVelocity = Vector3.ClampMagnitude(newVelocity, FlightMaxMoveSpeed);
+        float newSpeed = previousSpeed + (pitchAcceleration * Time.deltaTime);        
+        newSpeed = Mathf.Clamp(newSpeed, FlightMinMoveSpeed, FlightMaxMoveSpeed);
 
-        _controller.Move(newVelocity * Time.deltaTime);
-        //set vertical velocity to be used when switching out of flight mode
-        _verticalVelocity = newVelocity.y;
+        _controller.Move(currentForward * newSpeed * Time.deltaTime);
+
+        //update vertical velocity to be used when switching out of flight mode
+        _verticalVelocity = _controller.velocity.y;
 
         //ANIMATE
-
-        float targetSpeed = newVelocity.magnitude;
-        _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
+        _animationBlend = Mathf.Lerp(_animationBlend, newSpeed, Time.deltaTime * SpeedChangeRate);
         if (_animationBlend < 0.01f) _animationBlend = 0f;
 
         // update animator if using character
@@ -416,19 +412,19 @@ public class MyThirdPersonController : MonoBehaviour
         }
     }
 
-    //TODO : make sure speed is forward, otherwise retur 0
-    private float YokeRiseEffectiveness()
+    private float RiseCapacityForCurrentSpeed()
     {
-        float currentHorizontalSpeed = Vector3.ProjectOnPlane(_controller.velocity, Vector3.up).magnitude;
+        //float currentHorizontalSpeed = Vector3.ProjectOnPlane(_controller.velocity, Vector3.up).magnitude;
+        float currentSpeed = _controller.velocity.magnitude;
         
-        if (currentHorizontalSpeed <= MinSpeedForYokeRiseEffect)
+        if (currentSpeed <= MinSpeedForRiseCapacity)
             return 0;
-        else if (SpeedForMaxYokeRiseEffect <= MinSpeedForYokeRiseEffect)
+        else if (MaxSpeedForRiseCapacity <= MinSpeedForRiseCapacity)
             return 1;
         else
         {
-            float effectiveness = (currentHorizontalSpeed - MinSpeedForYokeRiseEffect) / (SpeedForMaxYokeRiseEffect - MinSpeedForYokeRiseEffect);
-            return Mathf.Clamp(effectiveness, 0f, 1f);
+            float capacity = (currentSpeed - MinSpeedForRiseCapacity) / (MaxSpeedForRiseCapacity - MinSpeedForRiseCapacity);
+            return Mathf.Clamp(capacity, 0f, 1f);
         }
     }
 
@@ -504,11 +500,21 @@ public class MyThirdPersonController : MonoBehaviour
         _verticalVelocity = Mathf.Clamp(_verticalVelocity, MaxFallSpeed, MaxRiseSpeed);        
     }
 
-    private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+    private static float Clamp360Angle(float lfAngle, float lfMin, float lfMax)
     {
         if (lfAngle < -360f) lfAngle += 360f;
         if (lfAngle > 360f) lfAngle -= 360f;
         return Mathf.Clamp(lfAngle, lfMin, lfMax);
+    }
+
+    //https://gist.github.com/johnsoncodehk/2ecb0136304d4badbb92bd0c1dbd8bae
+    //Does some voodoo to angles returned by transform.euleurangles to allow clamping them
+    //needed because transform.euleurangles returns variable representation
+    public static float ClampEulerAngle(float angle, float min, float max)
+    {
+        float start = (min + max) * 0.5f - 180;
+        float floor = Mathf.FloorToInt((angle - start) / 360) * 360;
+        return Mathf.Clamp(angle, min + floor, max + floor);
     }
 
     private void OnDrawGizmosSelected()
