@@ -84,22 +84,21 @@ public class MyThirdPersonController : MonoBehaviour
     public GameObject glider;
     public WindState WindState;
     public float FlightStartSpeed = 5f;
-    public float FlightGravity;
-    public float FlightMinMoveSpeed = 2f;
-    public float FlightMaxMoveSpeed = 12f;
+    public float FlightMinSpeed = 2f;
+    public float FlightMaxSpeed = 12f;
     public float FlightMaxDiveAccel = 10f;
     public float FlightMaxRiseSlow = -8f;
     [Tooltip("Below this speed, gravity takes over.")]
     public float MinSpeedForRiseCapacity = 3;
     [Tooltip("Up to this speed, rise capacity is improved.")]
     public float MaxSpeedForRiseCapacity = 10;
-    public float FlightYRotationSmoothTime;
-    public float FlightXRotationSmoothTime;
-    public float FlightZRotationSmoothTime;
-    public float FlightGravityRotationSmoothTime = 0.3f;
+    public float FlightYawRotationTime;
+    public float FlightPitchRotationTime;
+    public float FlightRollRotationTime;
+    public float FlightGravityDownPitchTime = 0.3f;
     public float FlightMaxPitch = 32.5f;
     public float FlightMaxRoll = 45f;
-    public float FlightPitchForNeutralSpeed = 15f;
+    public float FlightDownPitchForNeutralSpeed = 15f;
 
 
     // cinemachine
@@ -349,38 +348,44 @@ public class MyThirdPersonController : MonoBehaviour
                 //rise as much as possible
                 _targetPitchRotation = Mathf.Lerp(maxUpwardsPitch, 0, _input.move.y + 1);
             
-            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightXRotationSmoothTime);
+            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightPitchRotationTime);
         }
         else
         {
             //gravity takes over
             //todo: can still dive even faster if desired
-            _targetPitchRotation = 85f;
+            _targetPitchRotation = FlightMaxPitch;
             
-            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightGravityRotationSmoothTime);
+            xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightGravityDownPitchTime);
         }
 
 
         _targetYawRotation =  this.transform.eulerAngles.y + (90f * _input.move.x);
         _targetRollRotation = _input.move.x * -FlightMaxRoll;
-        float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yFlightRotationVelocity, FlightYRotationSmoothTime);
-        float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetRollRotation, ref _zFlightRotationVelocity, FlightZRotationSmoothTime);
+        float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yFlightRotationVelocity, FlightYawRotationTime);
+        float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetRollRotation, ref _zFlightRotationVelocity, FlightRollRotationTime);
 
         transform.rotation = Quaternion.Euler(xRotation, yRotation, zRotation);
 
         //ACCELERATE
-
+        //Scales based how far current pitch is above or below neutral speed pitch
+        //reaches max acceleration if at max pitch in either direction
+        
         Vector3 currentForward = transform.rotation * Vector3.forward;
-        float deltaFromDown = Vector3.Angle(currentForward, Vector3.down);
+        float currentDeltaFromDown = Vector3.Angle(currentForward, Vector3.down);
+        float neutralSpeedPitchDeltaFromDown = 90 - FlightDownPitchForNeutralSpeed;
+        
         float pitchAcceleration;
-        float deltaFromDownForNeutralSpeed = 90 - FlightPitchForNeutralSpeed;
-        if (deltaFromDown <= deltaFromDownForNeutralSpeed)
-            pitchAcceleration = Mathf.Lerp(FlightMaxDiveAccel, 0, deltaFromDown / deltaFromDownForNeutralSpeed);
+        if (currentDeltaFromDown <= neutralSpeedPitchDeltaFromDown)
+        {
+            float maxDownPitchDeltaFromDown = 90 - FlightMaxPitch;
+            pitchAcceleration = Mathf.Lerp(FlightMaxDiveAccel, 0, (currentDeltaFromDown - maxDownPitchDeltaFromDown) / (FlightMaxPitch - FlightDownPitchForNeutralSpeed));
+        }
         else
         {
-            float deltaFromNeutral = deltaFromDown - deltaFromDownForNeutralSpeed;
-            float maxDeltaFromNeutral = FlightMaxPitch + 90 - deltaFromDownForNeutralSpeed;
-            pitchAcceleration = Mathf.Lerp(0, FlightMaxRiseSlow, deltaFromNeutral / maxDeltaFromNeutral);
+            float currentDeltaFromNeutral = currentDeltaFromDown - neutralSpeedPitchDeltaFromDown;
+            float maxUpPitchDeltaFromNeutral = FlightMaxPitch + 90 - neutralSpeedPitchDeltaFromDown;
+            pitchAcceleration = Mathf.Lerp(0, FlightMaxRiseSlow, currentDeltaFromNeutral / maxUpPitchDeltaFromNeutral);
         }
 
         float previousSpeed;
@@ -393,7 +398,7 @@ public class MyThirdPersonController : MonoBehaviour
         }
 
         float newSpeed = previousSpeed + (pitchAcceleration * Time.deltaTime);        
-        newSpeed = Mathf.Clamp(newSpeed, FlightMinMoveSpeed, FlightMaxMoveSpeed);
+        newSpeed = Mathf.Clamp(newSpeed, FlightMinSpeed, FlightMaxSpeed);
 
         _controller.Move(currentForward * newSpeed * Time.deltaTime);
 
