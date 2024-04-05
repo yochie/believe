@@ -61,6 +61,12 @@ public class MyThirdPersonController : MonoBehaviour
     [Tooltip("The radius of the grounded check. Should match the radius of the CharacterController")]
     public float GroundedRadius = 0.28f;
 
+    [Tooltip("The radius of the grounded check while flying. Should match half the height of the CharacterController")]
+    public float FlightGroundedRadius = 0.9f;
+
+    [Tooltip("The radius of the grounded check while flying. Should match half the height of the CharacterController")]
+    public Transform FlightGroundCheckCenter;
+
     [Tooltip("What layers the character uses as ground")]
     public LayerMask GroundLayers;
 
@@ -227,11 +233,20 @@ public class MyThirdPersonController : MonoBehaviour
 
     private void GroundedCheck()
     {
-        // set sphere position, with offset
-        Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
-            transform.position.z);
-        Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
-            QueryTriggerInteraction.Ignore);
+        if (_flying)
+        {
+            // set sphere position, with offset
+            Grounded = Physics.CheckSphere(FlightGroundCheckCenter.position, FlightGroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
+        }
+        else
+        {
+            // set sphere position, with offset
+            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset,
+                transform.position.z);
+            Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
+                QueryTriggerInteraction.Ignore);
+        }
+
 
         // update animator if using character
         if (_hasAnimator)
@@ -330,7 +345,26 @@ public class MyThirdPersonController : MonoBehaviour
 
     private void FlightMove(bool flightStart)
     {
-        //ROTATE
+        transform.rotation = UpdateFlightRotation();
+        float newSpeed = UpdateFlightSpeed(flightStart);
+        _controller.Move(transform.forward * newSpeed * Time.deltaTime);
+
+        //update vertical velocity to be used when switching out of flight mode
+        _verticalVelocity = _controller.velocity.y;
+
+        //ANIMATE
+        _animationBlend = Mathf.Lerp(_animationBlend, newSpeed, Time.deltaTime * SpeedChangeRate);
+        if (_animationBlend < 0.01f) _animationBlend = 0f;
+
+        // update animator if using character
+        if (_hasAnimator)
+        {
+            _animator.SetFloat(_animIDSpeed, _animationBlend);
+            _animator.SetFloat(_animIDMotionSpeed, 1f);
+        }
+    }
+    private Quaternion UpdateFlightRotation()
+    {
         float riseCapacity = RiseCapacityForCurrentSpeed();
         float xRotation;
         if (riseCapacity > 0)
@@ -347,7 +381,7 @@ public class MyThirdPersonController : MonoBehaviour
             else
                 //rise as much as possible
                 _targetPitchRotation = Mathf.Lerp(maxUpwardsPitch, 0, _input.move.y + 1);
-            
+
             xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightPitchRotationTime);
         }
         else
@@ -355,26 +389,26 @@ public class MyThirdPersonController : MonoBehaviour
             //gravity takes over
             //todo: can still dive even faster if desired
             _targetPitchRotation = FlightMaxPitch;
-            
+
             xRotation = Mathf.SmoothDampAngle(transform.eulerAngles.x, _targetPitchRotation, ref _xFlightRotationVelocity, FlightGravityDownPitchTime);
         }
 
 
-        _targetYawRotation =  this.transform.eulerAngles.y + (90f * _input.move.x);
+        _targetYawRotation = this.transform.eulerAngles.y + (90f * _input.move.x);
         _targetRollRotation = _input.move.x * -FlightMaxRoll;
         float yRotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetYawRotation, ref _yFlightRotationVelocity, FlightYawRotationTime);
         float zRotation = Mathf.SmoothDampAngle(transform.eulerAngles.z, _targetRollRotation, ref _zFlightRotationVelocity, FlightRollRotationTime);
-
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, zRotation);
-
-        //ACCELERATE
-        //Scales based how far current pitch is above or below neutral speed pitch
-        //reaches max acceleration if at max pitch in either direction
         
-        Vector3 currentForward = transform.rotation * Vector3.forward;
-        float currentDeltaFromDown = Vector3.Angle(currentForward, Vector3.down);
+        return Quaternion.Euler(xRotation, yRotation, zRotation);        
+    }
+
+    //Scales acceleration based on how far current pitch is above or below neutral speed pitch
+    //reaches max acceleration if at max pitch in either direction
+    private float UpdateFlightSpeed(bool flightStart)
+    {
+        float currentDeltaFromDown = Vector3.Angle(transform.forward, Vector3.down);
         float neutralSpeedPitchDeltaFromDown = 90 - FlightDownPitchForNeutralSpeed;
-        
+
         float pitchAcceleration;
         if (currentDeltaFromDown <= neutralSpeedPitchDeltaFromDown)
         {
@@ -387,34 +421,24 @@ public class MyThirdPersonController : MonoBehaviour
             float maxUpPitchDeltaFromNeutral = FlightMaxPitch + 90 - neutralSpeedPitchDeltaFromDown;
             pitchAcceleration = Mathf.Lerp(0, FlightMaxRiseSlow, currentDeltaFromNeutral / maxUpPitchDeltaFromNeutral);
         }
+        float windEffect = WindEffect(transform.forward, this.WindState);
+        Debug.Log(windEffect);
+        pitchAcceleration += windEffect;
 
         float previousSpeed;
         if (flightStart)
         {
             previousSpeed = FlightStartSpeed;
-        } else
+        }
+        else
         {
             previousSpeed = _controller.velocity.magnitude;
         }
 
-        float newSpeed = previousSpeed + (pitchAcceleration * Time.deltaTime);        
+        float newSpeed = previousSpeed + (pitchAcceleration * Time.deltaTime);
         newSpeed = Mathf.Clamp(newSpeed, FlightMinSpeed, FlightMaxSpeed);
 
-        _controller.Move(currentForward * newSpeed * Time.deltaTime);
-
-        //update vertical velocity to be used when switching out of flight mode
-        _verticalVelocity = _controller.velocity.y;
-
-        //ANIMATE
-        _animationBlend = Mathf.Lerp(_animationBlend, newSpeed, Time.deltaTime * SpeedChangeRate);
-        if (_animationBlend < 0.01f) _animationBlend = 0f;
-
-        // update animator if using character
-        if (_hasAnimator)
-        {
-            _animator.SetFloat(_animIDSpeed, _animationBlend);
-            _animator.SetFloat(_animIDMotionSpeed, 1f);
-        }
+        return newSpeed;
     }
 
     private float RiseCapacityForCurrentSpeed()
@@ -431,6 +455,13 @@ public class MyThirdPersonController : MonoBehaviour
             float capacity = (currentSpeed - MinSpeedForRiseCapacity) / (MaxSpeedForRiseCapacity - MinSpeedForRiseCapacity);
             return Mathf.Clamp(capacity, 0f, 1f);
         }
+    }
+
+    private float WindEffect(Vector3 currentForward, WindState windState)
+    {
+        float windStrength = windState.GetWindStrength();
+        Vector3 wind = Quaternion.AngleAxis(-windState.GetWindDirection(), Vector3.up) * Vector3.forward * windStrength; 
+        return Vector3.Dot(currentForward, wind);
     }
 
     private void JumpAndGravity()

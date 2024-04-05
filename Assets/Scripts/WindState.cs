@@ -8,11 +8,15 @@ public class WindState : MonoBehaviour
     [Tooltip("Counter clock-wise angle from north")]
     [SerializeField] private float windDirection;
 
+    [SerializeField] private float windStrength;
+
     [SerializeField] private float changeInterval;
 
     [Tooltip("Degree delta per interval")]
     [Range(0, 360)]
     [SerializeField] private float changeRate;
+
+
 
     private void Awake()
     {
@@ -36,6 +40,11 @@ public class WindState : MonoBehaviour
         return this.windDirection;
     }
 
+    internal float GetWindStrength()
+    {
+        return this.windStrength;
+    }
+
     private IEnumerator RandomizeWindDirection()
     {
         while (true)
@@ -46,4 +55,6 @@ public class WindState : MonoBehaviour
             yield return new WaitForSeconds(this.changeInterval);
         }
     }
+
+
 }

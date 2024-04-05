@@ -827,6 +827,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
+      propertyPath: FlightGroundedRadius
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
       propertyPath: FlightYawRotationTime
       value: 1.3
       objectReference: {fileID: 0}
@@ -835,6 +840,11 @@ PrefabInstance:
       propertyPath: FlightRollRotationTime
       value: 0.6
       objectReference: {fileID: 0}
+    - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      propertyPath: FlightGroundCheckCenter
+      value: 
+      objectReference: {fileID: 1232035983}
     - target: {fileID: 5205771229259340095, guid: 99f790f3261f60444b8f59549475b0af,
         type: 3}
       propertyPath: FlightPitchRotationTime
@@ -1077,6 +1087,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1065387063}
+    - targetCorrespondingSourceObject: {fileID: 3893294197879345259, guid: 99f790f3261f60444b8f59549475b0af,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1232035983}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 99f790f3261f60444b8f59549475b0af, type: 3}
 --- !u!4 &651365087 stripped
@@ -1250,7 +1264,7 @@ CapsuleCollider:
   m_Radius: 0.28
   m_Height: 1.8
   m_Direction: 1
-  m_Center: {x: 0, y: 0.88, z: 0}
+  m_Center: {x: 0, y: 0.93, z: 0}
 --- !u!114 &1065387065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1367,6 +1381,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f9b178ccd3b86f4ebbfc1f5a2815e56, type: 3}
+--- !u!1 &1232035982
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1232035983}
+  m_Layer: 8
+  m_Name: FlightGroundCheckCenter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1232035983
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1232035982}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.9, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1401686189}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1390475891
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1737,6 +1782,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1562196807368986648, guid: d2bb889978c85ff48b6cd82392552be9,
+        type: 3}
+      propertyPath: changeRate
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1562196807368986648, guid: d2bb889978c85ff48b6cd82392552be9,
+        type: 3}
+      propertyPath: windStrength
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1562196807368986648, guid: d2bb889978c85ff48b6cd82392552be9,
+        type: 3}
+      propertyPath: changeInterval
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 6189044893901696335, guid: d2bb889978c85ff48b6cd82392552be9,
         type: 3}
       propertyPath: m_Name
