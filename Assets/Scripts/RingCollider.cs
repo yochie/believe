@@ -19,7 +19,7 @@ public class RingCollider : MonoBehaviour
             return;
 
         Ring ring = other.GetComponent<Ring>();
-        Vector3 ringForward = ring.orientation.forward;
+        Vector3 ringForward = ring.parentTransform.forward;
         Vector3 ringToPlayer = this.transform.position - ring.transform.position;
         bool onEntrySide = Vector3.Angle(ringForward, ringToPlayer) > 90f;
         if (onEntrySide) {
@@ -40,13 +40,13 @@ public class RingCollider : MonoBehaviour
             return;
 
         Ring ring = other.GetComponent<Ring>();
-        Vector3 ringForward = ring.orientation.forward;
+        Vector3 ringForward = ring.parentTransform.forward;
         Vector3 ringToPlayer = this.transform.position - ring.transform.position;
         bool onExitSide = Vector3.Angle(ringForward, ringToPlayer) < 90f;
         if (onExitSide)
         {
             Debug.Log("left ring");
-            ring.Remove();
+            ring.Consume();
         }
  
         this.enteredRing = false;

@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
+    public MyThirdPersonController player;
+    public Ring currentRing;
+    public Transform startPosition;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
+        if(Input.GetKeyDown(KeyCode.Q) ){
+            player.EnableController(false);
+            player.transform.position = startPosition.position;
+            player.EnableController(true);
+        }
     }
 }

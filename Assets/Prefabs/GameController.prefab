@@ -58,5 +58,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   windDirection: 0
-  changeInterval: 2
-  changeRate: 22.5
+  windStrength: 1
+  changeInterval: 5
+  changeRate: 10

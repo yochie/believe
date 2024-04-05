@@ -205,9 +205,9 @@ public class MyThirdPersonController : MonoBehaviour
         _flying = _input.fly;
         glider.SetActive(_flying);
 
+        JumpAndGravity();
         if (!_flying)
         {
-            JumpAndGravity();
             GroundMove();
         }
         else
@@ -422,7 +422,7 @@ public class MyThirdPersonController : MonoBehaviour
             pitchAcceleration = Mathf.Lerp(0, FlightMaxRiseSlow, currentDeltaFromNeutral / maxUpPitchDeltaFromNeutral);
         }
         float windEffect = WindEffect(transform.forward, this.WindState);
-        Debug.Log(windEffect);
+        //Debug.Log(windEffect);
         pitchAcceleration += windEffect;
 
         float previousSpeed;
@@ -586,4 +586,10 @@ public class MyThirdPersonController : MonoBehaviour
             AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
         }
     }
+
+    internal void EnableController(bool v)
+    {
+        _controller.enabled = v;
+    }
+
 }
