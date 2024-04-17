@@ -15,5 +15,10 @@ public class GameController : MonoBehaviour
             player.transform.position = startPosition.position;
             player.EnableController(true);
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 }

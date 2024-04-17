@@ -24,12 +24,14 @@ public class Ring : MonoBehaviour
 
     public void Consume()
     {
+        Scorer.Instance.AddToScore(1);
         if(_timeoutCoroutine != null)
             StopCoroutine(_timeoutCoroutine);
         RingSpawner.Instance.SpawnNextRing(this);
         Destroy(this.arrow);
         AudioSource.PlayClipAtPoint(this.ConsumedAudio, this.parentTransform.position, ConsumedAudioVolume);
         StartCoroutine(this.ConsumeAnimationCoroutine());
+
     }
 
     public void StartTimeout()
@@ -50,6 +52,7 @@ public class Ring : MonoBehaviour
         }
 
         AudioSource.PlayClipAtPoint(this.timeoutAudio, this.parentTransform.position, TimeOutAudioVolume);
+        Scorer.Instance.AddToScore(-1);
         this.parentTransform.gameObject.SetActive(false);
         RingSpawner.Instance.SpawnNewStartRing();
         Destroy(this.parentTransform.gameObject);
