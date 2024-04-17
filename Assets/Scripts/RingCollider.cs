@@ -20,14 +20,14 @@ public class RingCollider : MonoBehaviour
 
         Ring ring = other.GetComponent<Ring>();
         Vector3 ringForward = ring.parentTransform.forward;
-        Vector3 ringToPlayer = this.transform.position - ring.transform.position;
+        Vector3 ringToPlayer = this.transform.position - ring.parentTransform.position;
         bool onEntrySide = Vector3.Angle(ringForward, ringToPlayer) > 90f;
         if (onEntrySide) {
-            Debug.Log("entered ring");
+            //Debug.Log("entered ring");
             this.enteredRing = true;
         } else
         {
-            Debug.Log("wrong side");
+            //Debug.Log("entered on wrong side");
         }
     }
 
@@ -41,11 +41,11 @@ public class RingCollider : MonoBehaviour
 
         Ring ring = other.GetComponent<Ring>();
         Vector3 ringForward = ring.parentTransform.forward;
-        Vector3 ringToPlayer = this.transform.position - ring.transform.position;
+        Vector3 ringToPlayer = this.transform.position - ring.parentTransform.position;
         bool onExitSide = Vector3.Angle(ringForward, ringToPlayer) < 90f;
         if (onExitSide)
         {
-            Debug.Log("left ring");
+            //Debug.Log("left ring");
             ring.Consume();
         }
  

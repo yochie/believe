@@ -50,7 +50,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parentTransform: {fileID: 5127447334601508003}
   arrow: {fileID: 3435903441547224713}
-  TimeOutDuration: 6
+  TimeOutDuration: 8
+  minScale: 0.5
+  maxScale: 4
   ConsumptionAnimationDuration: 0.75
   ConsumedAudio: {fileID: 8300000, guid: 833c66bb93e0ca743a4e71383a38122d, type: 3}
   ConsumedAudioVolume: 0.5
@@ -152,8 +154,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.59, y: 0.3, z: 1.56}
-  m_Center: {x: 0, y: 0.1, z: 0}
+  m_Size: {x: 1.83, y: 1.61, z: 1.72}
+  m_Center: {x: 0, y: -0.51, z: 0}
 --- !u!1 &8181558542580242588
 GameObject:
   m_ObjectHideFlags: 0
@@ -181,7 +183,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 2.65, y: 9.24, z: 2.6519914}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4488619284523743471}
   - {fileID: 2658556810101177395}

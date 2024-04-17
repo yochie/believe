@@ -8,6 +8,8 @@ public class Ring : MonoBehaviour
     public Transform parentTransform;
     public GameObject arrow;
     public float TimeOutDuration = 6f;
+    public float minScale = 1f;
+    public float maxScale = 3f;
 
     public float ConsumptionAnimationDuration = 0.75f;
 
@@ -41,7 +43,8 @@ public class Ring : MonoBehaviour
         float ellapsedTime = 0;
         while(ellapsedTime < this.TimeOutDuration)
         {
-            this.parentTransform.localScale =  Vector3.one * Mathf.Lerp(1f, 3f, (ellapsedTime / this.TimeOutDuration));
+            float scale = Mathf.Lerp(this.minScale, this.maxScale, (ellapsedTime / this.TimeOutDuration));
+            this.parentTransform.localScale = Vector3.one * scale; 
             ellapsedTime += Time.deltaTime;
             yield return null;
         }
